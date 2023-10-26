@@ -229,7 +229,7 @@ static void fill_finddata(struct stat* st, const char* name,
 }
 
 int _findnext(intptr_t fhandle, struct _finddata_t* fileinfo) {
-    struct dirent entry, *result;
+    struct dirent* entry;
     struct fhandle_t* handle;
     struct stat st;
 
@@ -245,12 +245,12 @@ int _findnext(intptr_t fhandle, struct _finddata_t* fileinfo) {
 
     handle = (struct fhandle_t*) fhandle;
 
-    while (readdir_r(handle->dstream, &entry, &result) == 0 && result != NULL) {
-        if (!handle->dironly && !match_spec(handle->spec, entry.d_name)) {
+    while ((entry = readdir(handle->dstream)) != NULL) {
+        if (!handle->dironly && !match_spec(handle->spec, entry->d_name)) {
             continue;
         }
 
-        if (fstatat(dirfd(handle->dstream), entry.d_name, &st, 0) == -1) {
+        if (fstatat(dirfd(handle->dstream), entry->d_name, &st, 0) == -1) {
             return -1;
         }
 
@@ -258,7 +258,7 @@ int _findnext(intptr_t fhandle, struct _finddata_t* fileinfo) {
             continue;
         }
 
-        fill_finddata(&st, entry.d_name, fileinfo);
+        fill_finddata(&st, entry->d_name, fileinfo);
 
         return 0;
     }
